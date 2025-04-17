@@ -1,0 +1,10 @@
+spotipy
+python-dotenv
+librosa
+pydub
+mutagen
+matplotlib
+plotly
+dash
+psutil
+requests
