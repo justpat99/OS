@@ -1,6 +1,8 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from optimization.threaded_processor import threaded_process
+from utils.cache_u import load_from_cache, save_to_cache
+from utils.helpers import chunker
 
 # Spotify OAuth configuration
 SPOTIFY_CLIENT_ID = "72474caf37cd4fd7b860f677916a9ca5"
@@ -19,6 +21,12 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
 
 
 def threaded_fetch_tracks(query: str, limit: int = 10, max_workers: int = 5):
+    # Try loading from cache first
+    cache_key = f"{query.lower()}-{limit}"
+    cached = load_from_cache(cache_key)
+    if cached:
+        print("⚡ Loaded from cache!")
+        return cached
     """
     Search for tracks matching the query in parallel using threads.
     Returns a list of track dicts with 'id', 'name', 'artist'.
@@ -37,8 +45,11 @@ def threaded_fetch_tracks(query: str, limit: int = 10, max_workers: int = 5):
 
     offsets = list(range(limit))
     results = threaded_process(search_task, offsets, max_workers=max_workers)
-    # Filter out any None results
-    return [track for track in results if track]
+    tracks = [track for track in results if track]
+
+    # Save to cache
+    save_to_cache(cache_key, tracks)
+    return tracks
 
 
 def create_playlist_from_tracks(tracks: list, playlist_name: str = None, public: bool = False):
@@ -58,5 +69,5 @@ def create_playlist_from_tracks(tracks: list, playlist_name: str = None, public:
     for i in range(0, len(track_uris), 100):
         sp.playlist_add_items(playlist_id=playlist['id'], items=track_uris[i:i+100])
 
-    print(f"✅ Playlist '{playlist_name}' created with {len(track_uris)} tracks!")
+    print(f"\n✅ Playlist '{playlist_name}' created with {len(track_uris)} tracks!")
     return playlist['id']
