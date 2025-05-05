@@ -26,7 +26,6 @@ This is a Python-based CLI tool that fetches tracks based on a keyword (like moo
 2. **Create and activate a virtual environment** (recommended):
 
    ```bash
-   python -m venv venv
    # Windows
    python main.py
    #Then insert mood/genre/artist ex. Drake
